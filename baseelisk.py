@@ -160,15 +160,18 @@ def check_is_safe():
     out_list = check_all_servers()
     all_op = ''.join(out_list)
     clan_list = get_clan_list()
+    also_present = []
     if all_op == '':
         str_op = 'No games found.'
     else:
-        str_op = 'Not safe!'
         for line in all_op.splitlines():
             player, dlvl = line.split(' : ')
             if dlvl in ('M8', 'M9') and player not in clan_list:
-                return str_op
-        str_op = 'Safe!'
+                also_present.append(player)
+        if len(also_present) == 0:
+            str_op = 'Safe!'
+        else:
+            str_op = 'Not safe. Also present: ' + ','.join(also_present)
     return str_op
 
 
