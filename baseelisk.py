@@ -6,8 +6,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from discord.errors import HTTPException
-from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool as Pool
 import os
+import time
+import datetime
+import requests
+from bs4 import BeautifulSoup
 
 command_prefix = '!'
 description = 'Menacingly watches over players in TNNT.'
@@ -17,12 +21,15 @@ bot = commands.Bot(command_prefix, description=description)
 def quit_driver(driver):
     driver.quit()
 
+
 class AnyEc:
     """ Use with WebDriverWait to combine expected_conditions
         in an OR.
     """
+
     def __init__(self, *args):
         self.ecs = args
+
     def __call__(self, driver):
         for fn in self.ecs:
             try:
@@ -31,6 +38,17 @@ class AnyEc:
                     return res
             except:
                 pass
+
+
+def get_clan_list():
+    resp = requests.get('https://www.hardfought.org/tnnt/clans/2.html')
+    soup = BeautifulSoup(resp.text, 'html.parser')
+    table = soup.find("table", {"class": "clan-members"})
+    clan_list = [td.get_text().strip() for td in table.find_all('td')]
+    clan_list.remove('admins')
+    clan_list.remove('members')
+    return clan_list
+
 
 def connect_to_server(url):
     firefox_options = Options()
@@ -62,7 +80,7 @@ def get_watch_text_pages(driver, url):
                        '  w) Watch games in progress')
     ActionChains(driver).send_keys('w').perform()
 
-    WebDriverWait(driver, 10).until( AnyEc(
+    WebDriverWait(driver, 10).until(AnyEc(
         EC.text_to_be_present_in_element(
             (By.XPATH, '/html/body/x-screen/div[1]/x-row[4]'),
             ' The following games are in progress:'),
@@ -73,7 +91,7 @@ def get_watch_text_pages(driver, url):
     wait_by_xpath_text(driver,
                        '/html/body/x-screen/div[1]/x-row[3]', '')
     x_screen = driver.find_element_by_xpath('/html/body/x-screen')
-    #sleep(1)
+    # sleep(1)
     if 'Sorry, no games available for viewing.' in x_screen.text:
         return ['']
     else:
@@ -81,7 +99,7 @@ def get_watch_text_pages(driver, url):
         screen_text = x_screen.text
         pages.append(screen_text)
 
-        #TODO handle more pages than just one
+        # TODO handle more pages than just one
         # while more_pages_present(screen_text):
         #     ActionChains(driver).send_keys('>').perform()
         #     x_screen = driver.find_element_by_xpath('/html/body/x-screen')
@@ -127,15 +145,7 @@ def get_out_put_from_url(url):
     return parse_watch_text(pages)
 
 
-@bot.event
-async def on_ready():
-    print('Logged in as')
-    print(bot.user.name)
-    print(bot.user.id)
-    print('------')
-
-@bot.command(pass_context=True)
-async def whereis(ctx):
+def check_all_servers():
     url_list = ['https://www.hardfought.org/nethack/hterm/hterm-us',
                 'https://www.hardfought.org/nethack/hterm/hterm-eu',
                 'https://www.hardfought.org/nethack/hterm/hterm-au']
@@ -143,14 +153,46 @@ async def whereis(ctx):
     out_list = pool_of_three.map(get_out_put_from_url, url_list)
     pool_of_three.close()
     pool_of_three.join()
+    return out_list
+
+
+def check_is_safe():
+    out_list = check_all_servers()
+    all_op = ''.join(out_list)
+    clan_list = get_clan_list()
+    if all_op == '':
+        str_op = 'No games found.'
+    else:
+        str_op = 'Not safe!'
+        for line in all_op.splitlines():
+            player, dlvl = line.split(' : ')
+            if dlvl in ('M8', 'M9') and player not in clan_list:
+                return str_op
+        str_op = 'Safe!'
+    return str_op
+
+
+@bot.event
+async def on_ready():
+    print('Logged in as')
+    print(bot.user.name)
+    print(bot.user.id)
+    print('------')
+
+
+@bot.command(pass_context=True)
+async def whereis(ctx):
+    start_time = time.time()
+    out_list = check_all_servers()
     all_op = ''.join(out_list)
 
-    #all_op = get_out_put_from_url(url_list[1])
+    # all_op = get_out_put_from_url(url_list[1])
     # print('all_op', all_op)
     # await ctx.send(all_op)
 
+    elapsed_time = time.time() - start_time
     if all_op == '':
-        all_op = 'No games found'
+        all_op = 'No games found.'
 
     message_not_sent = True
 
@@ -159,7 +201,28 @@ async def whereis(ctx):
             await ctx.send(all_op)
         except HTTPException:
             continue
-        print('sent')
+        print(str(
+            datetime.datetime.now()) + ' : ' + 'Sent whereis. ' + 'Elapsed time : ' + str(
+            elapsed_time))
+        message_not_sent = False
+
+
+@bot.command(pass_context=True)
+async def issafe(ctx):
+    start_time = time.time()
+    str_op = check_is_safe()
+    elapsed_time = time.time() - start_time
+
+    message_not_sent = True
+
+    while message_not_sent:
+        try:
+            await ctx.send(str_op)
+        except HTTPException:
+            continue
+        print(str(
+            datetime.datetime.now()) + ' : ' + 'Sent issafe. ' + 'Elapsed time : ' + str(
+            elapsed_time))
         message_not_sent = False
 
 
