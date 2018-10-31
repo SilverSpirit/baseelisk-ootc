@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 
 command_prefix = '!'
 description = 'Disinterestedly watches players in TNNT.'
-bot = commands.Bot(command_prefix, description=description)
+bot = commands.Bot(command_prefix, description=description, self_bot=False)
 
 
 def quit_driver(driver):
@@ -187,6 +187,19 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('------')
+
+@bot.event
+async def on_message(message):
+    if message.content.startswith('<'):
+        split_text = message.content.split('>')
+        if len(split_text) == 2:
+            maybe_command = split_text[1].strip()
+            if maybe_command in ('!help', '!roles', '!whereis', '!issafe'):
+                message.author._user.bot = False
+                message.content = maybe_command
+
+
+    await bot.process_commands(message)
 
 
 @bot.command(pass_context=True)
