@@ -123,7 +123,7 @@ def parse_watch_text(watch_page_list):
     op_str = ''
     for page_text in watch_page_list:
         for line in page_text.splitlines()[3:-2]:
-            if 'tnnt' not in line:
+            if 'tnnt' in line:
                 split_line = line.split()
                 op_str += '{} : {}\n'.format(split_line[1], split_line[-1])
     # TODO put in data structure?
@@ -217,6 +217,10 @@ async def whereis(ctx):
             datetime.datetime.now()) + ' : ' + 'Sent whereis. ' + 'Elapsed time : ' + str(
             elapsed_time))
         message_not_sent = False
+
+@bot.command(pass_context=True)
+async def roles(ctx):
+    await ctx.send('https://docs.google.com/spreadsheets/d/1FUipxjq-twtXxHDm7DXpfs7EEhykTmun6zv2tQb0XbU/edit?usp=sharing')
 
 
 @bot.command(pass_context=True)
