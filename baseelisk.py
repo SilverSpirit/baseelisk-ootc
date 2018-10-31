@@ -123,7 +123,7 @@ def parse_watch_text(watch_page_list):
     op_str = ''
     for page_text in watch_page_list:
         for line in page_text.splitlines()[3:-2]:
-            if 'tnnt' in line:
+            if 'tnnt' not in line:
                 split_line = line.split()
                 op_str += '{} : {}\n'.format(split_line[1], split_line[-1])
     # TODO put in data structure?
@@ -167,7 +167,13 @@ def check_is_safe():
         for line in all_op.splitlines():
             player, dlvl = line.split(' : ')
             if dlvl in ('M8', 'M9') and player not in clan_list:
-                also_present.append(player)
+                if player in out_list[0]:
+                    server = 'US'
+                elif player in out_list[1]:
+                    server = 'EU'
+                else:
+                    server = 'AU'
+                also_present.append(player + ' ({})'.format(server))
         if len(also_present) == 0:
             str_op = 'Safe!'
         else:
@@ -187,15 +193,18 @@ async def on_ready():
 async def whereis(ctx):
     start_time = time.time()
     out_list = check_all_servers()
-    all_op = ''.join(out_list)
+    if ''.join(out_list) == '':
+        all_op = 'No games found.'
+    else:
+        region_list = ['***US***:\n', '***EU***:\n', '***AU***:\n']
+        all_op = ''.join([a + b for (a,b) in zip(region_list,out_list)])
 
     # all_op = get_out_put_from_url(url_list[1])
     # print('all_op', all_op)
     # await ctx.send(all_op)
 
     elapsed_time = time.time() - start_time
-    if all_op == '':
-        all_op = 'No games found.'
+
 
     message_not_sent = True
 
