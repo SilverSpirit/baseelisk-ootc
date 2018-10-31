@@ -14,7 +14,7 @@ import requests
 from bs4 import BeautifulSoup
 
 command_prefix = '!'
-description = 'Menacingly watches over players in TNNT.'
+description = 'Disinterestedly watches players in TNNT.'
 bot = commands.Bot(command_prefix, description=description)
 
 
