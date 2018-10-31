@@ -191,6 +191,11 @@ async def on_ready():
 
 @bot.command(pass_context=True)
 async def whereis(ctx):
+    """
+    track players in tnnt
+    :param ctx:
+    :return:
+    """
     start_time = time.time()
     out_list = check_all_servers()
     if ''.join(out_list) == '':
@@ -220,11 +225,21 @@ async def whereis(ctx):
 
 @bot.command(pass_context=True)
 async def roles(ctx):
+    """
+    link to OOTC Signup Tracker
+    :param ctx:
+    :return:
+    """
     await ctx.send('https://docs.google.com/spreadsheets/d/1FUipxjq-twtXxHDm7DXpfs7EEhykTmun6zv2tQb0XbU/edit?usp=sharing')
-
 
 @bot.command(pass_context=True)
 async def issafe(ctx):
+    """
+    check if swap chest in Mines End is safe to use for ootc
+
+    :param ctx:
+    :return:
+    """
     start_time = time.time()
     str_op = check_is_safe()
     elapsed_time = time.time() - start_time
