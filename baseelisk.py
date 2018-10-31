@@ -193,8 +193,6 @@ async def on_ready():
 async def whereis(ctx):
     """
     track players in tnnt
-    :param ctx:
-    :return:
     """
     start_time = time.time()
     out_list = check_all_servers()
@@ -227,8 +225,6 @@ async def whereis(ctx):
 async def roles(ctx):
     """
     link to OOTC Signup Tracker
-    :param ctx:
-    :return:
     """
     await ctx.send('https://docs.google.com/spreadsheets/d/1FUipxjq-twtXxHDm7DXpfs7EEhykTmun6zv2tQb0XbU/edit?usp=sharing')
 
@@ -236,9 +232,6 @@ async def roles(ctx):
 async def issafe(ctx):
     """
     check if swap chest in Mines End is safe to use for ootc
-
-    :param ctx:
-    :return:
     """
     start_time = time.time()
     str_op = check_is_safe()
