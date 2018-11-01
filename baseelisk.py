@@ -5,6 +5,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.expected_conditions import _find_element
 from discord.errors import HTTPException
 from multiprocessing.pool import ThreadPool as Pool
 import os
@@ -39,6 +40,14 @@ class AnyEc:
             except:
                 pass
 
+class text_to_change(object):
+    def __init__(self, locator, text):
+        self.locator = locator
+        self.text = text
+
+    def __call__(self, driver):
+        actual_text = _find_element(driver, self.locator).text
+        return actual_text != self.text and actual_text != ''
 
 def get_clan_list():
     resp = requests.get('https://www.hardfought.org/tnnt/clans/2.html')
@@ -100,11 +109,15 @@ def get_watch_text_pages(driver, url):
         pages.append(screen_text)
 
         # TODO handle more pages than just one
-        # while more_pages_present(screen_text):
-        #     ActionChains(driver).send_keys('>').perform()
-        #     x_screen = driver.find_element_by_xpath('/html/body/x-screen')
-        #     screen_text = x_screen.text
-        #     pages.append(screen_text)
+        while more_pages_present(screen_text):
+            text_before = driver.find_element_by_xpath('/html/body/x-screen/div[1]/x-row[7]').text
+            ActionChains(driver).send_keys('>').perform()
+            WebDriverWait(driver, 10).until(
+                   text_to_change((By.XPATH, "/html/body/x-screen/div[1]/x-row[7]"), text_before)
+               )
+            x_screen = driver.find_element_by_xpath('/html/body/x-screen')
+            screen_text = x_screen.text
+            pages.append(screen_text)
         return pages
 
 
@@ -134,7 +147,7 @@ def more_pages_present(page_text):
     count_line = page_text.splitlines()[-2]
     num_text, total_text = count_line.split('of')
     num_shown = int(num_text.split('-')[1])
-    total_games = int(total_text)
+    total_games = int(total_text[:-1].strip())
     return num_shown < total_games
 
 
