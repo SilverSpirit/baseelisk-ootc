@@ -53,7 +53,10 @@ def get_clan_list():
     resp = requests.get('https://www.hardfought.org/tnnt/clans/2.html')
     soup = BeautifulSoup(resp.text, 'html.parser')
     table = soup.find("table", {"class": "clan-members"})
-    clan_list = [td.get_text().strip() for td in table.find_all('td')]
+    clan_sep = [td.get_text().strip() for td in table.find_all('td')]
+    clan_list = []
+    for word in clan_sep:
+        clan_list.extend([spaced_word.strip() for spaced_word in word.split(',')])
     clan_list.remove('admins')
     clan_list.remove('members')
     return clan_list
