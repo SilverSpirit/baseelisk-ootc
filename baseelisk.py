@@ -7,6 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.expected_conditions import _find_element
 from discord.errors import HTTPException
+from selenium.common.exceptions import WebDriverException
 from multiprocessing.pool import ThreadPool as Pool
 import os
 import time
@@ -155,7 +156,11 @@ def more_pages_present(page_text):
 
 
 def get_out_put_from_url(url):
-    driver = connect_to_server(url)
+    try:
+        driver = connect_to_server(url)
+    except WebDriverException:
+        return ['']
+
     pages = get_watch_text_pages(driver, url)
     quit_driver(driver)
     return parse_watch_text(pages)
