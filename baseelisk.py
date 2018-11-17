@@ -41,6 +41,7 @@ class AnyEc:
             except:
                 pass
 
+
 class text_to_change(object):
     def __init__(self, locator, text):
         self.locator = locator
@@ -50,6 +51,7 @@ class text_to_change(object):
         actual_text = _find_element(driver, self.locator).text
         return actual_text != self.text and actual_text != ''
 
+
 def get_clan_list():
     resp = requests.get('https://www.hardfought.org/tnnt/clans/2.html')
     soup = BeautifulSoup(resp.text, 'html.parser')
@@ -57,7 +59,8 @@ def get_clan_list():
     clan_sep = [td.get_text().strip() for td in table.find_all('td')]
     clan_list = []
     for word in clan_sep:
-        clan_list.extend([spaced_word.strip() for spaced_word in word.split(',')])
+        clan_list.extend(
+            [spaced_word.strip() for spaced_word in word.split(',')])
     clan_list.remove('admins')
     clan_list.remove('members')
     return clan_list
@@ -114,11 +117,14 @@ def get_watch_text_pages(driver, url):
 
         # TODO handle more pages than just one
         while more_pages_present(screen_text):
-            text_before = driver.find_element_by_xpath('/html/body/x-screen/div[1]/x-row[7]').text
+            text_before = driver.find_element_by_xpath(
+                '/html/body/x-screen/div[1]/x-row[7]').text
             ActionChains(driver).send_keys('>').perform()
             WebDriverWait(driver, 10).until(
-                   text_to_change((By.XPATH, "/html/body/x-screen/div[1]/x-row[7]"), text_before)
-               )
+                text_to_change(
+                    (By.XPATH, "/html/body/x-screen/div[1]/x-row[7]"),
+                    text_before)
+            )
             x_screen = driver.find_element_by_xpath('/html/body/x-screen')
             screen_text = x_screen.text
             pages.append(screen_text)
@@ -187,14 +193,20 @@ def check_is_safe():
     else:
         for line in all_op.splitlines():
             player, dlvl = line.split(' : ')
-            if dlvl in ('M8', 'M9') and player not in clan_list:
+            if player not in clan_list:
+                if dlvl in ('M8', 'M9'):
+                    location = "Mines' End"
+                elif dlvl in ('D26', 'D27', 'D28', 'D29', 'D30'):
+                    location = 'VotD'
+                else:
+                    continue
                 if player in out_list[0]:
                     server = 'US'
                 elif player in out_list[1]:
                     server = 'EU'
                 else:
                     server = 'AU'
-                also_present.append(player + ' ({})'.format(server))
+                also_present.append(player + ' ({}, {})'.format(location, server))
         if len(also_present) == 0:
             str_op = 'Safe!'
         else:
@@ -209,6 +221,7 @@ async def on_ready():
     print(bot.user.id)
     print('------')
 
+
 @bot.event
 async def on_message(message):
     if message.content.startswith('<'):
@@ -218,7 +231,6 @@ async def on_message(message):
             if maybe_command in ('!help', '!roles', '!whereis', '!issafe'):
                 message.author._user.bot = False
                 message.content = maybe_command
-
 
     await bot.process_commands(message)
 
@@ -234,14 +246,13 @@ async def whereis(ctx):
         all_op = 'No games found.'
     else:
         region_list = ['***US***:\n', '***EU***:\n', '***AU***:\n']
-        all_op = ''.join([a + b for (a,b) in zip(region_list,out_list)])
+        all_op = ''.join([a + b for (a, b) in zip(region_list, out_list)])
 
     # all_op = get_out_put_from_url(url_list[1])
     # print('all_op', all_op)
     # await ctx.send(all_op)
 
     elapsed_time = time.time() - start_time
-
 
     message_not_sent = True
 
@@ -255,12 +266,15 @@ async def whereis(ctx):
             elapsed_time))
         message_not_sent = False
 
+
 @bot.command(pass_context=True)
 async def roles(ctx):
     """
     link to OOTC Signup Tracker
     """
-    await ctx.send('https://docs.google.com/spreadsheets/d/1FUipxjq-twtXxHDm7DXpfs7EEhykTmun6zv2tQb0XbU/edit?usp=sharing')
+    await ctx.send(
+        'https://docs.google.com/spreadsheets/d/1FUipxjq-twtXxHDm7DXpfs7EEhykTmun6zv2tQb0XbU/edit?usp=sharing')
+
 
 @bot.command(pass_context=True)
 async def issafe(ctx):
